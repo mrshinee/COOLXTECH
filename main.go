@@ -1,6 +1,6 @@
 package main
 
-//go:generate go run github.com/AshokShau/gotdbot/scripts/tools@latest
+//go:generate go run github.com/AshokShau/gotdbot/scripts/tools
 
 import (
 	"coolifymanager/src"
@@ -33,7 +33,7 @@ func main() {
 
 	tdlibLibraryPath := config.TdlibLibraryPath
 	if tdlibLibraryPath == "" {
-		tdlibLibraryPath = "./libtdjson.so.1.8.63"
+		tdlibLibraryPath = "./libtdjson.so.1.8.64"
 	}
 
 	bot, err := gotdbot.NewClient(int32(apiID), config.ApiHash, config.Token, &gotdbot.ClientOpts{LibraryPath: tdlibLibraryPath})
