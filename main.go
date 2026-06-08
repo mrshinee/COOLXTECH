@@ -15,15 +15,14 @@ import (
 
 func main() {
 	if err := config.InitConfig(); err != nil {
-		log.Fatalf("❌ Failed to initialize config: %v", err)
+		panic("failed to init config" + err.Error())
 	}
 
 	loc, err := time.LoadLocation("Asia/Kolkata")
 	if err != nil {
-		log.Printf("⚠️ Failed to load Asia/Kolkata time zone: %v. Using UTC.", err)
+		log.Printf("⚠Failed to load Asia/Kolkata time zone: %v. Using UTC.", err)
 	} else {
 		time.Local = loc
-		log.Println("✅ Time zone set to Asia/Kolkata")
 	}
 
 	apiID, err := strconv.Atoi(config.ApiId)
@@ -36,25 +35,22 @@ func main() {
 		tdlibLibraryPath = "./libtdjson.so.1.8.64"
 	}
 
-	bot, err := gotdbot.NewClient(int32(apiID), config.ApiHash, config.Token, &gotdbot.ClientOpts{LibraryPath: tdlibLibraryPath})
+	bot, err := gotdbot.NewClient(int32(apiID), config.ApiHash, config.Token, &gotdbot.ClientOpts{
+		LibraryPath: tdlibLibraryPath,
+		AutoRetry:   &gotdbot.AutoRetry{MaxFloodWait: 5 * time.Minute, ChatNotFound: true},
+	})
+
 	if err != nil {
 		log.Fatalf("❌ Failed to create bot client: %v", err)
 	}
-	err = src.InitFunc(bot.Dispatcher)
+	err = src.InitFunc(bot)
 	if err != nil {
-		panic(err.Error())
+		panic("failed to initialize bot: " + err.Error())
 	}
 
 	if err = bot.Start(); err != nil {
-		panic(err.Error())
+		panic("failed to start bot: " + err.Error())
 	}
 
-	me := bot.Me
-	username := ""
-	if me.Usernames != nil && len(me.Usernames.ActiveUsernames) > 0 {
-		username = me.Usernames.ActiveUsernames[0]
-	}
-
-	bot.Logger.Info("✅ Bot started as @" + username)
 	bot.Idle()
 }

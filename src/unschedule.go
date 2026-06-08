@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AshokShau/gotdbot"
+	td "github.com/AshokShau/gotdbot"
 )
 
-func unscheduleHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	msg := ctx.EffectiveMessage
-
+func unscheduleHandler(c *td.Client, msg *td.Message) error {
 	if !config.IsDev(msg.SenderID()) {
 		_, err := msg.ReplyText(c, "🚫 You are not authorized to use this command.", nil)
 		return err
@@ -34,6 +32,6 @@ func unscheduleHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		return err
 	}
 
-	_, err := msg.ReplyText(c, fmt.Sprintf("✅ Task <code>%s</code> removed successfully.", taskID), &gotdbot.SendTextMessageOpts{ParseMode: "HTML"})
+	_, err := msg.ReplyText(c, fmt.Sprintf("✅ Task <code>%s</code> removed successfully.", taskID), &td.SendTextMessageOpts{ParseMode: "HTML"})
 	return err
 }

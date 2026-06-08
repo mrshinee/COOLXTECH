@@ -75,8 +75,7 @@ func (c *Client) GetApplicationByUUID(uuid string) (*ApplicationDetail, error) {
 	cacheKey := fmt.Sprintf("app_%s", uuid)
 	if c.cache != nil {
 		if cached, found := c.cache.Get(cacheKey); found {
-			app := cached.(ApplicationDetail)
-			return &app, nil
+			return new(cached.(ApplicationDetail)), nil
 		}
 	}
 
@@ -245,8 +244,7 @@ func (c *Client) StartApplicationDeployment(uuid string, force, instantDeploy bo
 	cacheKey := fmt.Sprintf("app_start_%s_%v_%v", uuid, force, instantDeploy)
 	if c.cache != nil {
 		if cached, found := c.cache.Get(cacheKey); found {
-			deployment := cached.(StartDeploymentResponse)
-			return &deployment, nil
+			return new(cached.(StartDeploymentResponse)), nil
 		}
 	}
 
@@ -300,8 +298,7 @@ func (c *Client) StopApplicationByUUID(uuid string) (*StopApplicationResponse, e
 	cacheKey := fmt.Sprintf("app_stop_%s", uuid)
 	if c.cache != nil {
 		if cached, found := c.cache.Get(cacheKey); found {
-			stopResponse := cached.(StopApplicationResponse)
-			return &stopResponse, nil
+			return new(cached.(StopApplicationResponse)), nil
 		}
 	}
 
@@ -347,8 +344,7 @@ func (c *Client) RestartApplicationByUUID(uuid string) (*StartDeploymentResponse
 	cacheKey := fmt.Sprintf("app_restart_%s", uuid)
 	if c.cache != nil {
 		if cached, found := c.cache.Get(cacheKey); found {
-			deployment := cached.(StartDeploymentResponse)
-			return &deployment, nil
+			return new(cached.(StartDeploymentResponse)), nil
 		}
 	}
 

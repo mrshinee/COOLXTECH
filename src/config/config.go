@@ -225,30 +225,3 @@ func IsDev(userID int64) bool {
 	}
 	return false
 }
-
-// GetEnv returns environment variable with default value
-func GetEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
-}
-
-// GetEnvInt returns environment variable as int with default value
-func GetEnvInt(key string, defaultValue int) (int, error) {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue, nil
-	}
-	return strconv.Atoi(value)
-}
-
-// GetEnvBool returns environment variable as bool with default value
-func GetEnvBool(key string, defaultValue bool) (bool, error) {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue, nil
-	}
-	return strconv.ParseBool(value)
-}

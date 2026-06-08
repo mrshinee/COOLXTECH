@@ -9,13 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AshokShau/gotdbot"
+	td "github.com/AshokShau/gotdbot"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func scheduleHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	msg := ctx.EffectiveMessage
-
+func scheduleHandler(c *td.Client, msg *td.Message) error {
 	if !config.IsDev(msg.SenderID()) {
 		_, err := msg.ReplyText(c, "🚫 You are not authorized to use this command.", nil)
 		return err
@@ -25,7 +23,7 @@ func scheduleHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	if len(args) < 3 {
 		_, err := msg.ReplyText(c, "usage: /schedule <name> <schedule_type> [expression/time]\n"+
 			"Types: one_time, every_minute, hourly, daily, weekly, monthly, yearly, cron\n"+
-			"For one_time, use RFC3339 format (e.g., 2023-10-27T10:00:00Z)", &gotdbot.SendTextMessageOpts{ParseMode: ""})
+			"For one_time, use RFC3339 format (e.g., 2023-10-27T10:00:00Z)", &td.SendTextMessageOpts{ParseMode: ""})
 		return err
 	}
 

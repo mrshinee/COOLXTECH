@@ -8,19 +8,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AshokShau/gotdbot"
+	td "github.com/AshokShau/gotdbot"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func listProjectsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func listProjectsHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
 
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 	apps, err := config.Coolify.ListApplications()
 	if err != nil {
 		_, _ = cb.EditMessageText(c, "Failed to fetch projects:"+err.Error(), nil)
@@ -43,15 +41,15 @@ func listProjectsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 
 	start, end, paginationButtons := Paginate(len(apps), page, 7, "list_projects:")
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{}
+	kb := &td.ReplyMarkupInlineKeyboard{}
 	for _, app := range apps[start:end] {
 		text := fmt.Sprintf("📦 %s (%s)", app.Name, app.Status)
 		data := "project_menu:" + app.UUID
 
-		kb.Rows = append(kb.Rows, []gotdbot.InlineKeyboardButton{
+		kb.Rows = append(kb.Rows, []td.InlineKeyboardButton{
 			{
 				Text: text,
-				Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+				Type: &td.InlineKeyboardButtonTypeCallback{
 					Data: []byte(data),
 				},
 			},
@@ -59,12 +57,12 @@ func listProjectsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	}
 
 	if len(paginationButtons) > 0 {
-		row := make([]gotdbot.InlineKeyboardButton, 0, len(paginationButtons))
+		row := make([]td.InlineKeyboardButton, 0, len(paginationButtons))
 
 		for _, btn := range paginationButtons {
-			row = append(row, gotdbot.InlineKeyboardButton{
+			row = append(row, td.InlineKeyboardButton{
 				Text: btn.Text,
-				Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+				Type: &td.InlineKeyboardButtonTypeCallback{
 					Data: []byte(btn.Data),
 				},
 			})
@@ -73,19 +71,17 @@ func listProjectsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		kb.Rows = append(kb.Rows, row)
 	}
 
-	_, err = cb.EditMessageText(c, "<b>📋 Select a project:</b>", &gotdbot.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err = cb.EditMessageText(c, "<b>📋 Select a project:</b>", &td.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	return err
 }
 
-func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func projectMenuHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
 
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "project_menu:")
@@ -96,18 +92,18 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	}
 
 	text := fmt.Sprintf("<b>📦 %s</b>\n🌐 %s\n📄 Status: <code>%s</code>", app.Name, app.FQDN, app.Status)
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔄 Restart",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("restart:" + uuid),
 					},
 				},
 				{
 					Text: "🚀 Deploy",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("deploy:" + uuid),
 					},
 				},
@@ -115,13 +111,13 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "📜 Logs",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("logs:" + uuid),
 					},
 				},
 				{
 					Text: "ℹ️ Status",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("status:" + uuid),
 					},
 				},
@@ -129,7 +125,7 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "📅 Schedule",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("sch_m:" + uuid),
 					},
 				},
@@ -137,13 +133,13 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "🛑 Stop",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("stop:" + uuid),
 					},
 				},
 				{
 					Text: "❌ Delete",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("delete:" + uuid),
 					},
 				},
@@ -151,7 +147,7 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("list_projects:"),
 					},
 				},
@@ -159,7 +155,7 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		},
 	}
 
-	_, err = cb.EditMessageText(c, text, &gotdbot.EditTextMessageOpts{
+	_, err = cb.EditMessageText(c, text, &td.EditTextMessageOpts{
 		ParseMode:   "HTML",
 		ReplyMarkup: kb,
 	})
@@ -167,23 +163,22 @@ func projectMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	return err
 }
 
-func restartHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
+func restartHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "restart:")
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -193,34 +188,32 @@ func restartHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 
 	res, err := config.Coolify.RestartApplicationByUUID(uuid)
 	if err != nil {
-		_, _ = cb.EditMessageText(c, "❌ Restart failed: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, _ = cb.EditMessageText(c, "❌ Restart failed: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return nil
 	}
 
 	text := fmt.Sprintf("✅ Restart queued!\nDeployment UUID: <code>%s</code>", res.DeploymentUUID)
-	_, err = cb.EditMessageText(c, text, &gotdbot.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err = cb.EditMessageText(c, text, &td.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	return err
 }
 
-func deployHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func deployHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
 
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "deploy:")
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -230,32 +223,30 @@ func deployHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 
 	res, err := config.Coolify.StartApplicationDeployment(uuid, false, false)
 	if err != nil {
-		_, _ = cb.EditMessageText(c, "❌ Deploy failed: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, _ = cb.EditMessageText(c, "❌ Deploy failed: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return err
 	}
 
 	text := fmt.Sprintf("✅ Deployment queued!\nDeployment UUID: <code>%s</code>", res.DeploymentUUID)
-	_, err = cb.EditMessageText(c, text, &gotdbot.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err = cb.EditMessageText(c, text, &td.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	return err
 }
 
-func logsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func logsHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	uuid := strings.TrimPrefix(cb.DataString(), "logs:")
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -266,7 +257,7 @@ func logsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	_, _ = cb.EditMessageText(c, "Processing...", nil)
 	logsData, err := config.Coolify.GetApplicationLogsByUUID(uuid)
 	if err != nil {
-		_, _ = cb.EditMessageText(c, "❌ Logs error: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, _ = cb.EditMessageText(c, "❌ Logs error: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return nil
 	}
 
@@ -285,18 +276,16 @@ func logsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	tmpFile.Close()
 
 	file := tmpFile.Name()
-	_, err = c.EditMessageMedia(cb.ChatId, &gotdbot.InputMessageDocument{Document: gotdbot.GetInputFile(file)}, cb.MessageId, &gotdbot.EditMessageMediaOpts{ReplyMarkup: kb})
+	_, err = c.EditMessageMedia(cb.ChatId, &td.InputMessageDocument{Document: td.GetInputFile(file)}, cb.MessageId, &td.EditMessageMediaOpts{ReplyMarkup: kb})
 	if err != nil {
-		_, _ = cb.EditMessageText(c, "❌ Failed to send logs file: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, _ = cb.EditMessageText(c, "❌ Failed to send logs file: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return fmt.Errorf("edit message media error: %s", err.Error())
 	}
 
 	return nil
 }
 
-func statusHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func statusHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
@@ -306,12 +295,12 @@ func statusHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "status:")
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -321,34 +310,32 @@ func statusHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 
 	app, err := config.Coolify.GetApplicationByUUID(uuid)
 	if err != nil {
-		_, _ = cb.EditMessageText(c, "❌ Status error: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, _ = cb.EditMessageText(c, "❌ Status error: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return nil
 	}
 
 	text := fmt.Sprintf("📦 <b>%s</b>\nCurrent Status: <code>%s</code>", app.Name, app.Status)
-	_, err = cb.EditMessageText(c, text, &gotdbot.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err = cb.EditMessageText(c, text, &td.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	return err
 }
 
-func stopHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func stopHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "stop:")
 
 	res, err := config.Coolify.StopApplicationByUUID(uuid)
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -357,33 +344,31 @@ func stopHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	}
 
 	if err != nil {
-		_, _ = cb.EditMessageText(c, "❌ Stop failed: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, _ = cb.EditMessageText(c, "❌ Stop failed: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return nil
 	}
 
-	_, err = cb.EditMessageText(c, "🛑 "+res.Message, &gotdbot.EditTextMessageOpts{ReplyMarkup: kb, ParseMode: "HTML"})
+	_, err = cb.EditMessageText(c, "🛑 "+res.Message, &td.EditTextMessageOpts{ReplyMarkup: kb, ParseMode: "HTML"})
 	return err
 }
 
-func deleteHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func deleteHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "delete:")
 
 	err := config.Coolify.DeleteApplicationByUUID(uuid)
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -392,32 +377,30 @@ func deleteHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	}
 
 	if err != nil {
-		_, err = cb.EditMessageText(c, "❌ Delete failed: "+err.Error(), &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+		_, err = cb.EditMessageText(c, "❌ Delete failed: "+err.Error(), &td.EditTextMessageOpts{ReplyMarkup: kb})
 		return nil
 	}
 
-	_, err = cb.EditMessageText(c, "✅ Application deleted successfully.", &gotdbot.EditTextMessageOpts{ReplyMarkup: kb})
+	_, err = cb.EditMessageText(c, "✅ Application deleted successfully.", &td.EditTextMessageOpts{ReplyMarkup: kb})
 	return err
 }
 
-func scheduleMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func scheduleMenuHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	cbData := cb.DataString()
 	uuid := strings.TrimPrefix(cbData, "sch_m:")
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔄 Restart",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("sch_a:" + uuid + ":restart"),
 					},
 				},
@@ -425,7 +408,7 @@ func scheduleMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -433,21 +416,19 @@ func scheduleMenuHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		},
 	}
 
-	_, err := cb.EditMessageText(c, "<b>📅 Select Action Type:</b>", &gotdbot.EditTextMessageOpts{
+	_, err := cb.EditMessageText(c, "<b>📅 Select Action Type:</b>", &td.EditTextMessageOpts{
 		ParseMode:   "HTML",
 		ReplyMarkup: kb,
 	})
 	return err
 }
 
-func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func scheduleActionHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	// Format: sch_a:uuid:actionType
 	cbData := cb.DataString()
@@ -460,12 +441,12 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 	actionType := parts[1]
 
 	// Common intervals
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "Hourly",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte(fmt.Sprintf("sch_c:%s:%s:every_1h", uuid, actionType)),
 					},
 				},
@@ -473,7 +454,7 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "Daily",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte(fmt.Sprintf("sch_c:%s:%s:every_1d", uuid, actionType)),
 					},
 				},
@@ -481,7 +462,7 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "Every 2 Days",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte(fmt.Sprintf("sch_c:%s:%s:every_2d", uuid, actionType)),
 					},
 				},
@@ -489,7 +470,7 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "Every 3 Days",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte(fmt.Sprintf("sch_c:%s:%s:every_3d", uuid, actionType)),
 					},
 				},
@@ -497,7 +478,7 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "Weekly",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte(fmt.Sprintf("sch_c:%s:%s:every_7d", uuid, actionType)),
 					},
 				},
@@ -505,7 +486,7 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("sch_m:" + uuid),
 					},
 				},
@@ -513,21 +494,19 @@ func scheduleActionHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		},
 	}
 
-	_, err := cb.EditMessageText(c, "<b>⏰ Select Schedule:</b>", &gotdbot.EditTextMessageOpts{
+	_, err := cb.EditMessageText(c, "<b>⏰ Select Schedule:</b>", &td.EditTextMessageOpts{
 		ParseMode:   "HTML",
 		ReplyMarkup: kb,
 	})
 	return err
 }
 
-func scheduleCreateHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
-
+func scheduleCreateHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
 		return nil
 	}
-	_ = cb.Answer(c, 0, true, "Processing...", "")
+	_ = cb.Answer(c, 0, false, "Processing...", "")
 
 	// Format: sch_c:uuid:actionType:schedule
 	data := strings.TrimPrefix(cb.DataString(), "sch_c:")
@@ -565,12 +544,12 @@ func scheduleCreateHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		return nil
 	}
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "🔙 Back",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("project_menu:" + uuid),
 					},
 				},
@@ -578,7 +557,7 @@ func scheduleCreateHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		},
 	}
 
-	_, err = cb.EditMessageText(c, fmt.Sprintf("✅ Task scheduled successfully!\n\nID: <code>%s</code>\nType: %s\nSchedule: %s", task.ID.Hex(), actionType, schedule), &gotdbot.EditTextMessageOpts{
+	_, err = cb.EditMessageText(c, fmt.Sprintf("✅ Task scheduled successfully!\n\nID: <code>%s</code>\nType: %s\nSchedule: %s", task.ID.Hex(), actionType, schedule), &td.EditTextMessageOpts{
 		ParseMode:   "HTML",
 		ReplyMarkup: kb,
 	})

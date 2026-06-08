@@ -5,28 +5,26 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/AshokShau/gotdbot"
+	td "github.com/AshokShau/gotdbot"
 )
 
-func startHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	msg := ctx.EffectiveMessage
-
+func startHandler(c *td.Client, msg *td.Message) error {
 	response := fmt.Sprintf(`
 Welcome to <b>%s</b> — your assistant to manage Coolify projects.
 `, c.Me.FirstName)
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{
-		Rows: [][]gotdbot.InlineKeyboardButton{
+	kb := &td.ReplyMarkupInlineKeyboard{
+		Rows: [][]td.InlineKeyboardButton{
 			{
 				{
 					Text: "📋 List Projects",
-					Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+					Type: &td.InlineKeyboardButtonTypeCallback{
 						Data: []byte("list_projects"),
 					},
 				},
 				{
 					Text: "💫 Fᴀʟʟᴇɴ Pʀᴏᴊᴇᴄᴛꜱ",
-					Type: &gotdbot.InlineKeyboardButtonTypeUrl{
+					Type: &td.InlineKeyboardButtonTypeUrl{
 						Url: "https://t.me/FallenProjects",
 					},
 				},
@@ -34,7 +32,7 @@ Welcome to <b>%s</b> — your assistant to manage Coolify projects.
 			{
 				{
 					Text: "🛠 Sᴏᴜʀᴄᴇ Cᴏᴅᴇ",
-					Type: &gotdbot.InlineKeyboardButtonTypeUrl{
+					Type: &td.InlineKeyboardButtonTypeUrl{
 						Url: "https://github.com/AshokShau/coolify-telegram-bot",
 					},
 				},
@@ -42,19 +40,15 @@ Welcome to <b>%s</b> — your assistant to manage Coolify projects.
 		},
 	}
 
-	_, err := msg.ReplyText(c, response, &gotdbot.SendTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err := msg.ReplyText(c, response, &td.SendTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	if err != nil {
 		return fmt.Errorf("failed to send start message: %w", err)
 	}
 	return nil
 }
 
-func pingHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	msg := ctx.EffectiveMessage
-
+func pingHandler(c *td.Client, msg *td.Message) error {
 	start := time.Now()
-	updateLag := time.Since(time.Unix(int64(msg.Date), 0)).Milliseconds()
-
 	msg, err := msg.ReplyText(c, "⏱️ Pinging...", nil)
 	if err != nil {
 		return fmt.Errorf("failed to send ping message: %w", err)
@@ -67,12 +61,11 @@ func pingHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		"<b>📊 System Performance Metrics</b>\n\n"+
 			"⏱️ <b>Bot Latency:</b> <code>%d ms</code>\n"+
 			"🕒 <b>Uptime:</b> <code>%s</code>\n"+
-			"📩 <b>Update Lag:</b> <code>%d ms</code>\n"+
 			"⚙️ <b>Go Routines:</b> <code>%d</code>\n",
-		latency, uptime, updateLag, runtime.NumGoroutine(),
+		latency, uptime, runtime.NumGoroutine(),
 	)
 
-	_, err = msg.EditText(c, response, &gotdbot.EditTextMessageOpts{ParseMode: "HTML"})
+	_, err = msg.EditText(c, response, &td.EditTextMessageOpts{ParseMode: "HTML"})
 	if err != nil {
 		return fmt.Errorf("failed to edit ping message: %w", err)
 	}

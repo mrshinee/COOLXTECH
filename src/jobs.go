@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AshokShau/gotdbot"
+	td "github.com/AshokShau/gotdbot"
 )
 
 const pageSize = 5
 
-func jobsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	msg := ctx.EffectiveMessage
-
+func jobsHandler(c *td.Client, msg *td.Message) error {
 	if !config.IsDev(msg.SenderID()) {
 		_, err := msg.ReplyText(c, "🚫 You are not authorized to use this command.", nil)
 		return err
@@ -25,12 +23,11 @@ func jobsHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		return err
 	}
 
-	_, err = msg.ReplyText(c, text, &gotdbot.SendTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err = msg.ReplyText(c, text, &td.SendTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	return err
 }
 
-func jobsPaginationHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
-	cb := ctx.Update.UpdateNewCallbackQuery
+func jobsPaginationHandler(c *td.Client, cb *td.UpdateNewCallbackQuery) error {
 	data := cb.DataString()
 	if !config.IsDev(cb.SenderUserId) {
 		_ = cb.Answer(c, 0, true, "🚫 You are not authorized.", "")
@@ -48,11 +45,11 @@ func jobsPaginationHandler(c *gotdbot.Client, ctx *gotdbot.Context) error {
 		return nil
 	}
 
-	_, err = cb.EditMessageText(c, text, &gotdbot.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
+	_, err = cb.EditMessageText(c, text, &td.EditTextMessageOpts{ParseMode: "HTML", ReplyMarkup: kb})
 	return err
 }
 
-func buildJobsMessage(page int) (string, gotdbot.ReplyMarkup, error) {
+func buildJobsMessage(page int) (string, td.ReplyMarkup, error) {
 	tasks, err := database.GetTasks()
 	if err != nil {
 		return "", nil, fmt.Errorf("error fetching tasks: %v", err)
@@ -78,14 +75,14 @@ func buildJobsMessage(page int) (string, gotdbot.ReplyMarkup, error) {
 		sb.WriteString("➖➖➖➖➖➖➖➖➖➖\n")
 	}
 
-	kb := &gotdbot.ReplyMarkupInlineKeyboard{}
+	kb := &td.ReplyMarkupInlineKeyboard{}
 	if len(buttons) > 0 {
-		row := make([]gotdbot.InlineKeyboardButton, 0, len(buttons))
+		row := make([]td.InlineKeyboardButton, 0, len(buttons))
 
 		for _, btn := range buttons {
-			row = append(row, gotdbot.InlineKeyboardButton{
+			row = append(row, td.InlineKeyboardButton{
 				Text: btn.Text,
-				Type: &gotdbot.InlineKeyboardButtonTypeCallback{
+				Type: &td.InlineKeyboardButtonTypeCallback{
 					Data: []byte(btn.Data),
 				},
 			})
